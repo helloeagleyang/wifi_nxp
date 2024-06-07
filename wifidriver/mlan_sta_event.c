@@ -89,6 +89,7 @@ t_void wlan_reset_connect_state(pmlan_private priv, t_u8 drv_disconnect)
     }
 
 
+
     if (drv_disconnect == MTRUE)
     {
         /* Free Tx and Rx packets, report disconnect to upper layer */

@@ -23,12 +23,29 @@ target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
 endif()
 
 
+if (CONFIG_USE_middleware_wifi_fwdnld_intf_abs)
+# Add set(CONFIG_USE_middleware_wifi_fwdnld_intf_abs true) in config.cmake to use this component
+
+message("middleware_wifi_fwdnld_intf_abs component is included from ${CMAKE_CURRENT_LIST_FILE}.")
+
+target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}/./fwdnld_intf_abs/fwdnld_intf_abs.c
+)
+
+target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
+  ${CMAKE_CURRENT_LIST_DIR}/./fwdnld_intf_abs
+)
+
+
+endif()
+
+
 if (CONFIG_USE_middleware_wifi_template)
 # Add set(CONFIG_USE_middleware_wifi_template true) in config.cmake to use this component
 
 message("middleware_wifi_template component is included from ${CMAKE_CURRENT_LIST_FILE}.")
 
-if(CONFIG_USE_component_wifi_bt_module_tx_pwr_limits)
+if(CONFIG_USE_component_wifi_bt_module_tx_pwr_limits AND CONFIG_USE_component_wifi_bt_module_config)
 
 add_config_file(${CMAKE_CURRENT_LIST_DIR}/../../core/components/wifi_bt_module/template/app_config.h ${CMAKE_CURRENT_LIST_DIR}/../../core/components/wifi_bt_module/template/. middleware_wifi_template)
 add_config_file(${CMAKE_CURRENT_LIST_DIR}/../../core/components/wifi_bt_module/template/wifi_config.h ${CMAKE_CURRENT_LIST_DIR}/../../core/components/wifi_bt_module/template/. middleware_wifi_template)
@@ -41,9 +58,9 @@ if(CONFIG_USE_COMPONENT_CONFIGURATION)
   target_compile_definitions(${MCUX_SDK_PROJECT_NAME} PUBLIC
     -DLWIP_DNS=1
     -DLWIP_NETIF_HOSTNAME=1
-    -DLWIP_NETIF_STATUS_CALLBACK=1
     -DLWIP_IGMP=1
     -DSDIO_ENABLED
+    -D_XOPEN_SOURCE=500
   )
 
 endif()
@@ -62,18 +79,26 @@ if (CONFIG_USE_middleware_wifi_fwdnld)
 
 message("middleware_wifi_fwdnld component is included from ${CMAKE_CURRENT_LIST_FILE}.")
 
-if(CONFIG_USE_middleware_freertos-kernel AND CONFIG_USE_middleware_wifi_template AND CONFIG_USE_middleware_wifi_mlan_sdio AND CONFIG_USE_middleware_wifi_common_files)
+if(CONFIG_USE_middleware_freertos-kernel AND CONFIG_USE_middleware_wifi_template AND CONFIG_USE_middleware_wifi_mlan_sdio AND CONFIG_USE_middleware_wifi_common_files AND CONFIG_USE_middleware_wifi_fwdnld_intf_abs)
 
 target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/sdio.c
-  ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/firmware_dnld.c
+  ${CMAKE_CURRENT_LIST_DIR}/./firmware_dnld/firmware_dnld.c
 )
 
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/./incl
   ${CMAKE_CURRENT_LIST_DIR}/./wifi_bt_firmware
+  ${CMAKE_CURRENT_LIST_DIR}/./wifi_bt_firmware/8801
+  ${CMAKE_CURRENT_LIST_DIR}/./wifi_bt_firmware/IW416
+  ${CMAKE_CURRENT_LIST_DIR}/./wifi_bt_firmware/8987
+  ${CMAKE_CURRENT_LIST_DIR}/./wifi_bt_firmware/nw61x
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/incl
+  ${CMAKE_CURRENT_LIST_DIR}/./firmware_dnld
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs/incl
+  ${CMAKE_CURRENT_LIST_DIR}/./fwdnld_intf_abs
 )
 
 else()
@@ -90,7 +115,7 @@ if (CONFIG_USE_middleware_wifi_wifidriver)
 
 message("middleware_wifi_wifidriver component is included from ${CMAKE_CURRENT_LIST_FILE}.")
 
-if(CONFIG_USE_middleware_freertos-kernel AND CONFIG_USE_utility_debug_console AND CONFIG_USE_middleware_wifi_template AND ((CONFIG_USE_middleware_wifi_sdio AND CONFIG_USE_middleware_wifi_fwdnld)))
+if(CONFIG_USE_middleware_freertos-kernel AND CONFIG_USE_utility_debug_console AND CONFIG_USE_middleware_wifi_template AND ((CONFIG_USE_middleware_wifi_sdio AND CONFIG_USE_middleware_wifi_fwdnld AND CONFIG_USE_middleware_wifi_fwdnld_intf_abs)))
 
 target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/mlan_11ac.c
@@ -141,6 +166,9 @@ target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/wpa_supp_if
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/wpa_supp_if/incl
   ${CMAKE_CURRENT_LIST_DIR}/./certs
+  ${CMAKE_CURRENT_LIST_DIR}/./firmware_dnld
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs/incl
 )
 
 else()
@@ -163,19 +191,19 @@ target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}/./dhcpd/dhcp-server-main.c
   ${CMAKE_CURRENT_LIST_DIR}/./dhcpd/dhcp-server.c
   ${CMAKE_CURRENT_LIST_DIR}/./dhcpd/dns-server.c
-  ${CMAKE_CURRENT_LIST_DIR}/./port/lwip/net.c
-  ${CMAKE_CURRENT_LIST_DIR}/./port/lwip/wifi_netif.c
+  ${CMAKE_CURRENT_LIST_DIR}/./port/net/net.c
+  ${CMAKE_CURRENT_LIST_DIR}/./port/net/wifi_netif.c
   ${CMAKE_CURRENT_LIST_DIR}/./wlcmgr/wlan.c
   ${CMAKE_CURRENT_LIST_DIR}/./wlcmgr/wlan_txpwrlimit_cfg.c
-  ${CMAKE_CURRENT_LIST_DIR}/./port/lwip/hooks/lwip_default_hooks.c
+  ${CMAKE_CURRENT_LIST_DIR}/./port/net/hooks/lwip_default_hooks.c
 )
 
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/./dhcpd
   ${CMAKE_CURRENT_LIST_DIR}/./incl
-  ${CMAKE_CURRENT_LIST_DIR}/./incl/port/lwip
-  ${CMAKE_CURRENT_LIST_DIR}/./port/lwip
-  ${CMAKE_CURRENT_LIST_DIR}/./incl/port/lwip/hooks
+  ${CMAKE_CURRENT_LIST_DIR}/./incl/port/net
+  ${CMAKE_CURRENT_LIST_DIR}/./port/net
+  ${CMAKE_CURRENT_LIST_DIR}/./incl/port/net/hooks
 )
 
 else()
@@ -215,13 +243,16 @@ message("middleware_wifi_mlan_sdio component is included from ${CMAKE_CURRENT_LI
 if(CONFIG_USE_middleware_sdmmc_host_usdhc_freertos AND CONFIG_USE_middleware_sdmmc_sdio AND CONFIG_USE_middleware_sdmmc_host_usdhc AND CONFIG_USE_middleware_wifi_template AND CONFIG_USE_middleware_wifi_common_files)
 
 target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/mlan_sdio.c
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs/mlan_sdio.c
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs/fwdnld_sdio.c
 )
 
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/./incl/wifidriver
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver
   ${CMAKE_CURRENT_LIST_DIR}/./wifidriver/incl
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs
+  ${CMAKE_CURRENT_LIST_DIR}/./sdio_nxp_abs/incl
 )
 
 else()
@@ -246,6 +277,8 @@ target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}/./cli/cli_utils.c
   ${CMAKE_CURRENT_LIST_DIR}/./nw_utils/wifi_ping.c
   ${CMAKE_CURRENT_LIST_DIR}/./nw_utils/iperf.c
+  ${CMAKE_CURRENT_LIST_DIR}/./nw_utils/init_enet.c
+  ${CMAKE_CURRENT_LIST_DIR}/./nw_utils/telnet/telnet_server.c
   ${CMAKE_CURRENT_LIST_DIR}/./wlcmgr/wlan_basic_cli.c
   ${CMAKE_CURRENT_LIST_DIR}/./wlcmgr/wlan_enhanced_tests.c
   ${CMAKE_CURRENT_LIST_DIR}/./wlcmgr/wlan_tests.c
@@ -258,6 +291,8 @@ target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/./cli
   ${CMAKE_CURRENT_LIST_DIR}/./incl
   ${CMAKE_CURRENT_LIST_DIR}/./incl/wlcmgr
+  ${CMAKE_CURRENT_LIST_DIR}/./nw_utils
+  ${CMAKE_CURRENT_LIST_DIR}/./nw_utils/telnet
 )
 
 else()
@@ -269,35 +304,19 @@ endif()
 endif()
 
 
-if (CONFIG_USE_middleware_edgefast_wifi)
-# Add set(CONFIG_USE_middleware_edgefast_wifi true) in config.cmake to use this component
-
-message("middleware_edgefast_wifi component is included from ${CMAKE_CURRENT_LIST_FILE}.")
-
-if(CONFIG_USE_middleware_wifi)
-
-target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
-  ${CMAKE_CURRENT_LIST_DIR}/../../core/middleware/edgefast_wifi/include
-)
-
-else()
-
-message(SEND_ERROR "middleware_edgefast_wifi dependency does not meet, please check ${CMAKE_CURRENT_LIST_FILE}.")
-
-endif()
-
-endif()
-
-
 if (CONFIG_USE_middleware_edgefast_wifi_nxp)
 # Add set(CONFIG_USE_middleware_edgefast_wifi_nxp true) in config.cmake to use this component
 
 message("middleware_edgefast_wifi_nxp component is included from ${CMAKE_CURRENT_LIST_FILE}.")
 
-if(CONFIG_USE_middleware_edgefast_wifi AND CONFIG_USE_middleware_wifi AND CONFIG_USE_middleware_freertos-kernel)
+if(CONFIG_USE_middleware_wifi AND CONFIG_USE_middleware_freertos-kernel)
 
 target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}/../../core/middleware/edgefast_wifi/source/wpl_nxp.c
+  ${CMAKE_CURRENT_LIST_DIR}/../../core/components/edgefast_wifi/source/wpl_nxp.c
+)
+
+target_include_directories(${MCUX_SDK_PROJECT_NAME} PUBLIC
+  ${CMAKE_CURRENT_LIST_DIR}/../../core/components/edgefast_wifi/include
 )
 
 else()
